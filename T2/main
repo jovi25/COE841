@@ -1,0 +1,15 @@
+clc; clear all;
+
+% Inicialização de Parâmetros
+i = 0; n = 10^4;
+
+%% Kalman
+
+while (i<n)
+    i = i+1;
+    
+    % Predição
+    
+    % Correção
+    
+end
