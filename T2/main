@@ -1,12 +1,12 @@
 clc; clear all;
 
 % Inicialização de Parâmetros
-i = 1; n = 10^4;
+t = 1; n = 10^4;
 
 %% Kalman
 
-while (i<n)
-    i = i+1;
+while (t<n)
+    t = t+1;
     
     % Predição
     mib(t) = A(t)*mi(t-1) + B(t)*u(t);
