@@ -2,7 +2,7 @@
  clear all;close all;clc;
 
 % Inicialização de Parâmetros
-t = 1; n = 10^4;
+t = 1; n = 10^5;
 mi_ant= [0;0];     %Condição inicial t=0
 sigma_ant= [0.25 0;0 0.5];  %Condição inicial t=0
 x_ant=[0;0];
@@ -18,7 +18,9 @@ X_ANTreal=x_ant;    %Só pra teste
 
 %% Kalman
 
-
+plot(0);
+axis([0.5 2.5 -2 4])
+hold on
 while (t<n)
        
     %Melhor escrever assim porque senão teremos erros de indexação
@@ -30,33 +32,39 @@ while (t<n)
     
     u= 3*exp(-0.001*t);
     
-    eps=R*[-1+2*rand;-1+2*rand];
-    delta=Q*[-1+2*rand];
+    eps=R*randn(2,1);
+    delta=Q*randn();
     
-    x_t=A*x_ant+B*u+eps
-    X_REAL=A*X_ANTreal+B*u     %Só pra teste
-    X_ANTreal=X_REAL;          %Só pra teste
-    z= C*x_t + delta
-    Z_REAL=C*X_REAL            %Só pra teste
+    x_t = A*x_ant + B*u + eps
+    X_REAL = A*X_ANTreal + B*u   %Só pra teste
+    X_ANTreal = X_REAL;          %Só pra teste
+    z =  C*x_t + delta
+    Z_REAL = C*X_REAL            %Só pra teste
     
     % Predição
     mib = A*mi_ant + B*u;
     sigmab = A*sigma_ant*A' + R;
     
     % Ganho de Kalman
-    K=sigmab*C'*inv(C*sigmab*C' + Q);
+    K = sigmab*C'*inv(C*sigmab*C' + Q);
     
     % Correção
-    mi= mib + K*(z-C*mib);
-    [lin,~]=size(A);
-    sigma= (eye(lin)-K*C)*sigmab;
-    
-    %plot_kalman(mi,sigma);
+    mi = mib + K*(z-C*mib);
+    [lin,~] = size(A);
+    sigma = (eye(lin)-K*C)*sigmab;
+        
+%     plot_kalman(mi,sigma);
     
     % Transformação da media e covariancia (atual --> ant )
-    mi_ant=mi;
-    sigma_ant=sigma;
-    x_ant= x_t;
-     t = t+1;
+    mi_ant = mi;
+    sigma_ant = sigma;
+    x_ant = x_t;
+    t = t+1;
+    
+    if(rem(t,100)==0)
+        plot(x_t(1),'b-o')
+    end
     
 end
+
+plot(x_t(1),'r-p');
