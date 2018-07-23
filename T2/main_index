@@ -2,17 +2,15 @@
 clear all;close all;clc;
  
 % Inicialização de Parâmetros
-t = 1; n = 1000;    %10^4 TAVA DEMORANDO MUITO;
+t = 1; n = 10;    %10^4 TAVA DEMORANDO MUITO;
 mi(:,:) = zeros(2,n);
 sigma(:,:,:) = zeros(2,2,n);
 x(:,:) = zeros(2,n);
 Xr(:,:) = zeros(2,n);
 z(1,:) = zeros(1,n);
-Zr(:,:) = zeros(2,n);
+Zr(1,:) = zeros(1,n);
 
-mi(:,1)= [0;0];     %Condição inicial t=0
 sigma(:,:,1) = [0.25 0;0 0.5];  %Condição inicial t=0
-x(:,1)=[0;0];
 
 %Parâmetros do sistema
 m=1;          %Massa do carro
@@ -27,7 +25,7 @@ Xr(:,1) = x(:,1);
 %% Kalman
 
 
-while (t<n)
+while (t<=n)
     t = t + 1;
     %Melhor escrever assim porque senão teremos erros de indexação
     A = Ateste; 
@@ -45,7 +43,7 @@ while (t<n)
     Xr(:,t) = A*Xr(:,t-1) + B*u;
     Xr(:,t-1) = Xr(:,t);
     z(t) = C*x(:,t) + delta;
-    Zr(:,t) = C*Xr(t);
+    Zr(t) = C*Xr(:,t);
     
     % Predição
     mib = A*mi(:,t-1) + B*u;
@@ -55,15 +53,15 @@ while (t<n)
     K = sigmab*C'*inv(C*sigmab*C' + Q);
     
     % Correção
-    mik = mib + K*(z(t) - C*mib);
+    mi(:,t) = mib + K*(z(t) - C*mib);
     [lin,~] = size(A);
-    sigmak = (eye(lin) - K*C)*sigmab;
+    sigma(:,:,t) = (eye(lin) - K*C)*sigmab;
     
-    plot_kalman(mik,sigmak);
+    plot_kalman(mi(:,t),sigma(:,:,t));
     
     % Transformação da media e covariancia (atual --> ant )
-    mi(:,t-1) = mik;
-    sigma(:,:,t-1) = sigmak;
+    mi(:,t-1) = mi(:,t);
+    sigma(:,:,t-1) = sigma(:,:,t);
     x(:,t-1) = x(:,t);
     
 end
