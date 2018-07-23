@@ -2,69 +2,62 @@
  clear all;close all;clc;
 
 % Inicialização de Parâmetros
-t = 1; n = 10^5;
+t = 1; n = 1000    %10^4 TAVA DEMORANDO MUITO;
 mi_ant= [0;0];     %Condição inicial t=0
 sigma_ant= [0.25 0;0 0.5];  %Condição inicial t=0
 x_ant=[0;0];
 
 %Parâmetros do sistema
-m=1;
-alfa=0.3;
-Ateste=[0 1;0 -alfa/m];
-Bteste=[0;1/m];
+m=1;          %Massa do carro
+alfa=0.3;     %Coeficiente viscoso
+h=0.01;       %Período de amostragem
+Ateste=[1 (m/alfa)*(1-exp(-h*alfa/m)); 0 exp(-h*alfa/m)]; 
+Bteste=[(1/alfa)*(h+(m/alfa)*(exp(-alfa*h/m)-1)); (1/alfa)*(-exp(-alfa*h/m)+1)];
 Cteste=[1 0];
 
-X_ANTreal=x_ant;    %Só pra teste
+X_ANTreal=x_ant;
 
 %% Kalman
 
-plot(0);
-axis([0.5 2.5 -2 4])
-hold on
+
 while (t<n)
        
     %Melhor escrever assim porque senão teremos erros de indexação
     A= Ateste; 
     B= Bteste;
     C= Cteste;
-    R= [0.3 0.15;0.15 0.2];
-    Q= [0.5];
+    R= [0.3 0.15*0;0.15*0 0.2]*0.01;
+    Q= [0.02];
     
-    u= 3*exp(-0.001*t);
+    u= 3*exp(-0.1*t);
     
     eps=R*randn(2,1);
     delta=Q*randn();
     
-    x_t = A*x_ant + B*u + eps
-    X_REAL = A*X_ANTreal + B*u   %Só pra teste
-    X_ANTreal = X_REAL;          %Só pra teste
-    z =  C*x_t + delta
-    Z_REAL = C*X_REAL            %Só pra teste
+    x_t=A*x_ant+B*u+eps
+    X_REAL=A*X_ANTreal+B*u
+    X_ANTreal=X_REAL;
+    z= C*x_t + delta
+    Z_REAL=C*X_REAL
     
     % Predição
     mib = A*mi_ant + B*u;
     sigmab = A*sigma_ant*A' + R;
     
     % Ganho de Kalman
-    K = sigmab*C'*inv(C*sigmab*C' + Q);
+    K=sigmab*C'*inv(C*sigmab*C' + Q);
     
     % Correção
-    mi = mib + K*(z-C*mib);
-    [lin,~] = size(A);
-    sigma = (eye(lin)-K*C)*sigmab;
-        
-%     plot_kalman(mi,sigma);
+    mi= mib + K*(z-C*mib);
+    [lin,~]=size(A);
+    sigma= (eye(lin)-K*C)*sigmab;
+    
+    plot_kalman(mi,sigma);
     
     % Transformação da media e covariancia (atual --> ant )
-    mi_ant = mi;
-    sigma_ant = sigma;
-    x_ant = x_t;
-    t = t+1;
-    
-    if(rem(t,100)==0)
-        plot(x_t(1),'b-o')
-    end
+    mi_ant=mi;
+    sigma_ant=sigma;
+    x_ant= x_t;
+     t = t+1;
     
 end
-
-plot(x_t(1),'r-p');
