@@ -2,7 +2,7 @@
 clear all;close all;clc;
 
 % Inicialização de Parâmetros
-t = 1; n = 10;    %10^4 TAVA DEMORANDO MUITO;
+t = 1; n = 10^5;    %10^4 TAVA DEMORANDO MUITO;
 d = 1; c = 0.5; i=0;
 
 mi(:,:) = zeros(3,n);
@@ -20,15 +20,21 @@ H = eye(3);
 while(t<n)
     t=t+1;
 
-    G(:,:,t)=[1 0 -d*sin(mi(3,t-1)); 0 1 d*cos(mi(3,(t-1)));0 0 1];
+    R = [0.01 0 0;0 0.01 0;0 0 0.1*pi/180];   %Escolhida sem nenhum critério (associada ao sinal de controle)
+    Q = [0.01 0 0;0 0.01 0;0 0 0.1*pi/180];  %Escolhida sem nenhum critério (associada a medição)
     
     u(:,t) = [1;0];
+    G(:,:,t)=[1 0 -d*sin(mi(3,t-1))*u(1,t); 0 1 d*cos(mi(3,(t-1)))*u(1,t);0 0 1];
+    eps=  mvnrnd([0;0;0],R);
+    delta= mvnrnd([0;0;0],Q);
+       
+    Xr(:,t) = [Xr(1,t-1)+d*cos(Xr(3,t-1))*u(1,t);  Xr(2,t-1)+d*sin(Xr(3,t-1))*u(1,t);   Xr(3,t-1)+c*u(2,t)]; %Estou usando u em t. Antes estava em t-1
+    x(:,t)= Xr(:,t) + eps';
+    z(:,t)= eye(3)*x(:,t) + delta';
+    %Xr(1:3,t)
+    %x(1:3,t)
+    %z(1:3,t)
     
-    Xr(:,t) = [Xr(1,t-1)+d*cos(Xr(3,t-1))*u(1,t-1);  Xr(2,t-1)+d*sin(Xr(3,t-1))*u(1,t-1);   Xr(3,t-1)+c*u(2,t-1)]
-    
-    R = [0.3 0 0;0 0.25 0;0 0 0.2];          %Escolhida sem nenhum critério
-    Q = [0.05 0 0;0 0.05 0;0 0 0.1*pi/180];  %Escolhida sem nenhum critério
-
     %Predição
     mib = [mi(1,t-1)+d*cos(mi(3,t-1))*u(1,t);  mi(2,t-1)+d*sin(mi(3,t-1))*u(1,t);   mi(3,t-1)+c*u(2,t)]; %g()
     sigmab = G(:,:,t)*sigma(:,:,t-1)*transpose(G(:,:,t)) + R;
@@ -38,7 +44,7 @@ while(t<n)
     K(:,:,t) = sigmab*transpose(H)*inv(H*sigmab*transpose(H) + Q  );
 
     %Correção
-    mi(:,t) = mib + K(:,:,t)*(  z(:,t) - mib  ); %h()
+    mi(:,t) = mib + K(:,:,t)*(  z(:,t) - H*mib  ); %h()
     [lin,~] = size(G);
     sigma(:,:,t)=(eye(lin)-K(:,:,t)*H)*sigmab;
     
@@ -53,3 +59,4 @@ figure
 histogram(x(2,:))
 figure
 histogram(x(3,:))
+
