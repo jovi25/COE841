@@ -16,19 +16,19 @@ Zr(1,:) = zeros(1,n);
 
 t=t+1;
 
-G(:,:,t)=xxx;
-H(:,:,t)=yyy;
+G(:,:,t)=[1 0 -d*sin(mi(3,t-1)); 0 1 d*cos(mi(3,(t-1));0 0 1];
+H(:,:,t)=eye(3);
 R = [0.3 0 0;0 0.25 0;0 0 0.2];          %Escolhida sem nenhum critério
 Q = [0.05 0 0;0 0.05 0;0 0 0.1*pi/180];  %Escolhida sem nenhum critério
 
 %Predição
-mib(:,:,t)= g(u(t),mi(t-1));
+mib(:,:,t)= [mi(1,t-1)+d*cos(mi(3,t-1))*u(1,t);  mi(2,t-1)+d*sin(mi(3,t-1))*u(1,t);   mi(3,t-1)+c*u(2,t)];
 sigmab(:,:,t)= G(:,:,t)*sigma(:,:,t-1)*transpose(G(:,:,t)) + R;
 
 %Ganho de Kalman
 K(:,:,t)=sigmab(:,:,t)*transpose(H(:,:,t))*inv(  H(:,:,t)*sigmab(:,:,t)*transpose(H(:,:,t)) + Q  );
 
 %Correção
-mi(:,:,t)=mib(:,:,t)*K(:,:,t)*(  z(:,:,t) - h(mib(t))  );
+mi(:,:,t)=mib(:,:,t)*K(:,:,t)*(  z(:,:,t) - [mib(1,t);mib(2,t);mib(3,t)]  );
 [lin,~]=size(G);
 sigma(:,:,t)=(eye(lin)-K(:,:,t)*H(:,:,t))*sigmab(:,:,t);
