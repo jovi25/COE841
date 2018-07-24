@@ -3,7 +3,7 @@ clear all;close all;clc;
 
 % Inicialização de Parâmetros
 t = 1; n = 10^5;    %10^4 TAVA DEMORANDO MUITO;
-d = 1; c = 0.5; i=0;
+d = 1; c = 0.5;
 
 mi(:,:) = zeros(3,n);
 sigma(:,:,:) = zeros(3,3,n);
@@ -16,28 +16,31 @@ K(:,:,:) = zeros(3,3,n);
 H = eye(3);
 
 %% Kalman estendido
-
+circ = figure
+hold on
 while(t<n)
     t=t+1;
 
     R = [0.01 0 0;0 0.01 0;0 0 0.1*pi/180];   %Escolhida sem nenhum critério (associada ao sinal de controle)
     Q = [0.01 0 0;0 0.01 0;0 0 0.1*pi/180];  %Escolhida sem nenhum critério (associada a medição)
     
-    u(:,t) = [1;0];
-    G(:,:,t)=[1 0 -d*sin(mi(3,t-1))*u(1,t); 0 1 d*cos(mi(3,(t-1)))*u(1,t);0 0 1];
-    eps=  mvnrnd([0;0;0],R);
-    delta= mvnrnd([0;0;0],Q);
+    u(:,t) = [1;1];
+    
+    G(:,:)=[1 0 -d*sin(mi(3,t-1))*u(1,t); 0 1 d*cos(mi(3,(t-1)))*u(1,t);0 0 1];
+    
+    eps =  mvnrnd([0;0;0],R);
+    delta = mvnrnd([0;0;0],Q);
        
     Xr(:,t) = [Xr(1,t-1)+d*cos(Xr(3,t-1))*u(1,t);  Xr(2,t-1)+d*sin(Xr(3,t-1))*u(1,t);   Xr(3,t-1)+c*u(2,t)]; %Estou usando u em t. Antes estava em t-1
+    xaux = Xr(1,t); yaux = Xr(2,t);
+    plot(xaux,yaux,'b--o')
+    
     x(:,t)= Xr(:,t) + eps';
     z(:,t)= eye(3)*x(:,t) + delta';
-    %Xr(1:3,t)
-    %x(1:3,t)
-    %z(1:3,t)
     
     %Predição
     mib = [mi(1,t-1)+d*cos(mi(3,t-1))*u(1,t);  mi(2,t-1)+d*sin(mi(3,t-1))*u(1,t);   mi(3,t-1)+c*u(2,t)]; %g()
-    sigmab = G(:,:,t)*sigma(:,:,t-1)*transpose(G(:,:,t)) + R;
+    sigmab = G(:,:)*sigma(:,:,t-1)*transpose(G(:,:)) + R;
 
     %Ganho de Kalman
 
@@ -53,10 +56,39 @@ end
 
 % figure
 % plot_kalman(mi(:,t),sigma(:,:,t));
-figure
-histogram(x(1,:))
-figure
-histogram(x(2,:))
-figure
-histogram(x(3,:))
+
+EKFx = figure
+subplot(1,2,1)
+histogram(x(1,:),'Normalization','probability')
+title('Componente X simulada')
+axis([-2 3 0 0.2])
+subplot(1,2,2)
+histogram(Xr(1,:),'Normalization','probability')
+axis([-2 3 0 0.2])
+title('Componente X real')
+
+EKFy = figure
+subplot(1,2,1)
+histogram(x(2,:),'Normalization','probability')
+title('Componente Y simulada')
+axis([-0.5 4.5 0 0.2])
+subplot(1,2,2)
+histogram(Xr(2,:),'Normalization','probability')
+axis([-0.5 4.5 0 0.2])
+title('Componente Y real')
+
+EKFtheta = figure
+subplot(1,2,1)
+histogram(x(3,:),'Normalization','probability')
+axis([-100 5100 0 0.05])
+title('Componente theta simulada')
+subplot(1,2,2)
+histogram(Xr(3,:),'Normalization','probability')
+axis([-100 5100 0 0.05])
+title('Componente theta real')
+
+% saveas(circ,'F:\OLD PC\BACKUP HD 1TB - 03-2016\Acadêmico\Mestrado\2º Período\Autônomos\T2\Imagens/Circulo','png')
+% saveas(EKFx,'F:\OLD PC\BACKUP HD 1TB - 03-2016\Acadêmico\Mestrado\2º Período\Autônomos\T2\Imagens/EKFx','jpeg')
+% saveas(EKFy,'F:\OLD PC\BACKUP HD 1TB - 03-2016\Acadêmico\Mestrado\2º Período\Autônomos\T2\Imagens/EKFy','jpeg')
+% saveas(EKFtheta,'F:\OLD PC\BACKUP HD 1TB - 03-2016\Acadêmico\Mestrado\2º Período\Autônomos\T2\Imagens/EKFtheta','jpeg')
 
