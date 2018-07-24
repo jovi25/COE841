@@ -1,0 +1,47 @@
+n= a ser definido
+lambda = a ser definido
+gama= a ser definido
+
+
+wm0=lambda/(n+lambda);
+wc0=wm0+(1-alfa^2+beta);
+
+wc1=1/(2*(n+lambda));
+wc2=wc1;
+wm1=wc1;
+wm2=wc1;
+
+s0=mi;
+s1=mi+sqrt((n+lambda)*sigma);
+s2=mi-sqrt((n+lambda)*sigma);
+
+psi0=g( s0, u(t) )
+psi1=g( s1, u(t) )
+psi2=g( s2, u(t) )
+
+%predicao
+
+mi_aux= (psi0*wm0) + (psi1*wm1) + (psi2*wm2);
+sigma_aux= 	wc0*(psi0-mi)*transpose(psi0-mi) + wc1*(psi1-mi)*transpose(psi1-mi) + wc2*(psi2-mi)*transpose(psi2-mi);
+
+M = xxx  % Ruido do sinal de controle
+Q = yyyy  % Ruido da medida
+
+[lin,~]=size(mi)  % Quero pegar daqui quantas linhas tem mi ( o numero de estados)
+mi_a(t-1)=[transpose(mi(t-1)) zeros(1,lin) zeros(1,lin)];
+sigma_a(t-1)=[sigma(t-1) zeros(lin,lin) zeros(lin,lin);zeros(lin,lin) M zeros(lin,lin);zeros(lin,lin) zeros(lin,lin) Q];
+
+s_a(t-1)=[mi_a(t-1) mi_a(t-1)+gama*sqrt(sigma_a(t-1)) mi_a(t-1)-gama*sqrt(sigma_a(t-1))] 
+s_x_b(t)= F(s_a(1,t-1)', s_a(2,t-1)')
+mib(t)= sum(wmi*s_x_b(:,i,t));
+sigmab(t)= sum(wci*(s_x_b(:,i,t)-mib(t))*transpose(s_x_b(:,i,t)-mib(t));
+
+%correcao
+Zb(t)= h(s_x_b(t),s_a(3,t-1))
+mi_Zb(t)=sum(wmi*Zb(i,t))
+sigma_Zb(t)=sum(wci*(Zb(i,t)-mi_Zb(t))*transpose(Zb(i,t)-mi_Zb(t)))
+cov_Zb(t)= sum(wci*(s_x_b(:,i,t)-mib(t))*transpose(Zb(i,t)-mi_Zb(t)))
+K(t)=cov_Zb(t)*inv(sigma_Zb(t));
+
+mi(t)= mib(t) + K(t)*(z(t)-mi_Zb(t))
+sigma= sigmab(t) - K(t)*sigma_Zb(t)*transpose(K(t))
