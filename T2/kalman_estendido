@@ -1,0 +1,34 @@
+% Filtro de Kalman extendido
+clear all;close all;clc;
+
+% Inicialização de Parâmetros
+t = 1; n = 100;    %10^4 TAVA DEMORANDO MUITO;
+mi(:,:) = zeros(2,n);
+sigma(:,:,:) = zeros(2,2,n);
+x(:,:) = zeros(2,n);
+Xr(:,:) = zeros(2,n);
+z(1,:) = zeros(1,n);
+Zr(1,:) = zeros(1,n);
+
+
+
+%% Kalman estendido
+
+t=t+1;
+
+G(:,:,t)=xxx;
+H(:,:,t)=yyy;
+R = [0.3 0 0;0 0.25 0;0 0 0.2];          %Escolhida sem nenhum critério
+Q = [0.05 0 0;0 0.05 0;0 0 0.1*pi/180];  %Escolhida sem nenhum critério
+
+%Predição
+mib(:,:,t)= g(u(t),mi(t-1));
+sigmab(:,:,t)= G(:,:,t)*sigma(:,:,t-1)*transpose(G(:,:,t)) + R;
+
+%Ganho de Kalman
+K(:,:,t)=sigmab(:,:,t)*transpose(H(:,:,t))*inv(  H(:,:,t)*sigmab(:,:,t)*transpose(H(:,:,t)) + Q  );
+
+%Correção
+mi(:,:,t)=mib(:,:,t)*K(:,:,t)*(  z(:,:,t) - h(mib(t))  );
+[lin,~]=size(G);
+sigma(:,:,t)=(eye(lin)-K(:,:,t)*H(:,:,t))*sigmab(:,:,t);
