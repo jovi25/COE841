@@ -1,0 +1,98 @@
+%Versão funcionando- 26/07/2018 - Filtro de Kalman
+
+clear;
+clc;
+simulationTime=10;
+sampleTime=0.01;
+experiments=1; %Número de experimentos realizados para cada comando
+
+%Plant - Duplo Integrador (Discretizado)
+
+h=sampleTime;
+
+Phi =[
+      1   sampleTime;
+      0       1
+                     ];
+        
+Gamma = [
+         sampleTime^2/2
+         sampleTime
+          ];
+
+C=[1 0];
+
+R=[
+    0.5    0;
+    0    0.5];
+
+Q=[0.3];
+      
+t(1)=0;
+u(1)=0;
+
+%Condições Iniciais
+x_1(1,1:experiments)=0;
+x_2(1,1:experiments)=0;
+
+mu_1(1,1:experiments)=0;
+mu_2(1,1:experiments)=0;
+mu=zeros(2,1,simulationTime/sampleTime+1);
+muBar=zeros(2,1,simulationTime/sampleTime+1);
+SigmaBar=zeros(2,2,simulationTime/sampleTime+1);
+Sigma=zeros(2,2,simulationTime/sampleTime+1);
+
+Sigma(:,:,1)=[0.1 0 ;0 0.1];
+
+for i=1:simulationTime/sampleTime+1
+   % Sinal de Controle
+   if i <= (simulationTime/sampleTime+1)/4
+       u(i+1)=1;
+   end
+   if i > (simulationTime/sampleTime+1)/4
+       u(i+1)=-1;
+   end
+   if i > (simulationTime/sampleTime+1)/2
+       u(i+1)=0;
+   end
+   
+   % Tempo
+   t(i)=sampleTime*(i-1);
+   
+   for j=1:experiments
+    % Ruído de Transição de Estado
+    epsilon_1(i,j)=normrnd(0,1)/10;
+    epsilon_2(i,j)=normrnd(0,1)/10;
+   
+    % Ruído de Medição
+    delta(i,j)=normrnd(0.5,1)/10;
+    
+    % Dinâmica da Planta
+    x_1(i+1,j)=Phi(1,1)*x_1(i,j)+Phi(1,2)*x_2(i,j)+Gamma(1,1)*u(i)+epsilon_1(i,j);
+    x_2(i+1,j)=Phi(2,1)*x_1(i,j)+Phi(2,2)*x_2(i,j)+Gamma(2,1)*u(i)+epsilon_2(i,j);
+      z(i+1,j)=C(1,1)*x_1(i,j)+Phi(1,2)*x_2(i,j)+delta(i,j);
+    
+    %======================================================================
+    %                        Kalman Filter
+    %======================================================================
+    
+    %PREDICTION:
+    
+    % Dinâmica da Média
+        muBar(:,:,i+1)=Phi*mu(:,:,i)+Gamma*u(i);      
+     SigmaBar(:,:,i+1)=Phi*Sigma(:,:,i)*Phi'+R;
+     
+    
+    %CORRECTION:
+    K(:,:,i+1)=SigmaBar(:,:,i+1)*C'*inv(C*SigmaBar(:,:,i+1)*C'+Q);
+    mu(:,:,i+1)=muBar(:,:,i)+K(:,:,i)*(z(i)-C*muBar(:,:,i));
+    Sigma(:,:,i+1)=(eye(2)-K(:,:,i+1)*C)*SigmaBar(:,:,i+1);
+    
+   end   
+end
+
+ x_1(simulationTime/sampleTime+1,:)=[];
+ x_2(simulationTime/sampleTime+1,:)=[];
+   z(simulationTime/sampleTime+1,:)=[];
+
+plot_kalman(mu(:,:,100),Sigma(:,:,100));
