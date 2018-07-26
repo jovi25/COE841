@@ -3,12 +3,12 @@ function [] = plot_kalman(mu, sigma)
 %   Detailed explanation goes here
 mu=mu';
 
-x1 = -2:.02:2; x2 = -2:.02:2;
+x1 = -25:1:25; x2 = -25:1:25;
 [X1,X2] = meshgrid(x1,x2);
+p = mvncdf([min(x1) min(x2)],[max(x1) max(x2)],mu,sigma);
 F = mvnpdf([X1(:) X2(:)],mu,sigma);
 F = reshape(F,length(x2),length(x1));
 surf(x1,x2,F);
 caxis([min(F(:))-.5*range(F(:)),max(F(:))]);
-axis([-1 1 -1.5 1.5 0 0.6])
 xlabel('x1'); ylabel('x2'); zlabel('Probability Density');
 end
