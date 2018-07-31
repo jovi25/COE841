@@ -1,0 +1,78 @@
+clc; clear all;
+M = 2000; t=1; i = 0; n = 21;
+S(:,:,:) = zeros(M,2,n); %L: Partículas, C:Pos e Velocidade, n: Iterações
+S(:,:,1) = 5 - 10*rand(M,2,1);
+w(:,:) = zeros(M,2);
+x(:,:,1) = [0; 0];
+waux(:,:) = zeros(M,2);
+sampleTime = 0.01;
+u(:,:) = zeros(n,1);
+
+Phi =[
+      1   sampleTime;
+      0       1
+                     ];
+        
+Gamma = [
+         sampleTime^2/2
+         sampleTime
+          ];
+
+C=[1 0];
+
+R=[
+    0.5    0;
+    0    0.5];
+
+Q=0.3;
+      
+figure
+hold on
+
+while(t<n)
+    i = 0;
+    t = t+1;
+    
+    % Ruído de Transição de Estado
+    aux1=mvnrnd([0;0],R)*0.005;
+    % Ruído de Medição
+    aux2=mvnrnd(0,Q)*0.1;
+    
+    u(t) = 1000;
+    x(:,:,t) = Phi*x(:,:,t-1) + Gamma*u(t) + aux1';
+    Z(t,1) = C*x(:,:,t) + aux2;
+
+    while(i<M)
+        i = i+1;
+        S(i,:,t) = Phi*S(i,:,t-1)' + Gamma*u(t);
+        waux(i,1) = 1 / abs(Z(t,1)-S(i,1,t));        
+    end
+    
+    w = waux / sum(waux);
+    
+    % SUS
+    j = 0;  pick = 1;
+    [W, Index] = sort(w,'ascend');
+    Sord(:,:) = S(Index,:,t);
+    u = (1/M)*rand();
+    
+    while(j<M)
+        if (u<sum(W(1:pick,1)))
+            j = j + 1;
+            St(j,:) =  Sord(pick,:);
+            u = u + 1/M;
+        else
+            pick = pick + 1;            
+        end
+        
+    end
+    
+    S(:,:,t) = St(:,:);
+    
+    for p = 1:M
+        plot(S(p,1,t),(1.1-t*0.05),'g-o')
+    end
+
+    plot(Z(t,1),0.05,'-p')
+    pause(1)
+end
