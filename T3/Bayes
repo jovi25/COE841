@@ -1,0 +1,36 @@
+clc; clear all;
+% Bayes: P(x|u) = sum (P(x|u,x')*P(x'))
+% P(closed|u) = ? || P(open|u) = ?
+
+% Inicialização de Parâmetros
+done = 0; Bc = 0; Bo = 0;
+
+% Exemplo de um robô fechando a porta
+
+% Chance de conseguir fechar a porta caso esteja aberta = 90%
+% Chance da porta permanecer aberta (falhar ao tentar fechar) = 10%
+% Chance de fechar a porta, com ela fechada = 100%
+% Chance da porta abrir, dado que está fechada = 0%
+
+% Probabilidade inicial da porta estar aberta ou fechada
+Pxi(:,:) = [5/8 3/8];
+
+% Matriz de probabilidades, de acordo com o exemplo descrito
+Px(:,:) = [0.9 0.1; 1 0];
+
+while not (done)
+    
+    for i = 1:2
+        Bc = Bc + Px(i,1)*Pxi(1,i);
+    end
+    
+    for j = 1:2
+        Bo = Bo + Px(j,2)*Pxi(1,j);
+    end
+    
+    done = 1;
+    
+end
+
+Bo
+Bc
