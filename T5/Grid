@@ -1,0 +1,15 @@
+x0 = [0;0];
+
+a=1;
+N=3;
+
+for i =-N:N
+	for j =-N:N
+			if(i~=0 && j~=0)
+				xaux(:,a) = x0 + [i;j]
+			a=a+1;
+			end
+	end
+end
+
+plot(xaux(1,:),xaux(2,:),'b-.')
