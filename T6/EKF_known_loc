@@ -1,0 +1,59 @@
+function [mi_t,sigma_t] = EKF_known_loc (mi_tm1,sigma_tm1,u_t,zts,m)
+
+% Alocando entradas
+vt = u_t(1);
+wt = u_t(2);
+x_tm1 = mi_tm1(1);
+y_tm1 = mi_tm1(2);
+theta_tm1 = mi_tm1(3);
+rv = vt/wt;
+
+% Definindo parâmetros
+dt = 0.1;
+Rt = 0.3*eye(3);
+sr = 0.3;
+sp = 0.3;
+ss = 0.3;
+
+% Variáveis extra internas
+sum1 = 0;
+sum2 = 0;
+
+
+%------------------------------- Código ----------------------------------%
+
+mib_t = mi_tm1 + ([-rv*sin(theta_tm1) + rv*sin(theta_tm1 + wt*dt);
+                rv*cos(theta_tm1) - rv*cos(theta_tm1 + wt*dt);
+                wt*dt]);
+
+Gt = [1 0 rv*cos(theta_tm1) - rv*cos(theta_tm1 + wt*dt);
+     0 1 rv*sin(theta_tm1) - rv*sin(theta_tm1 + wt*dt);
+     0 0 1];
+ 
+ sigmab_t = Gt*sigma_tm1*transpose(Gt) + Rt;
+ 
+ Q_t = diag(sr,sp,ss);
+ 
+ 
+ for i = 1:length(zts)
+     
+     delta = [m(1,i) - mib(1); m(2,i) - mib(2)]; % Chamar certo na main
+     
+     q = transpose(delta)*delta;
+     
+     z_hat(:,i) = [sqrt(q); atan2(delta(2),delta(1))];
+     
+     H_t(:,:,i) = (1/q) * [sqrt(q)*delta(1) -sqrt(q)*delta(2) 0;
+                     delta(2)         delta(1)         -1;
+                     0                  0               0];
+     K_t(:,:,i) = sigmab_t*transpose(H_t(i))*(H_t(i)*sigmab_t*transpose(H_t(i)) + Q_t)^(-1);
+     
+     sum1 = sum1 + K_t(:,:,i)*(zts(:,i)-z_hat(:,i));
+     sum2 = sum2 + K_t(:,:,i)*H_t(:,:,i);
+     
+ end
+
+mi_t = mib_t + sum1;
+sigma_t = (eye(3) - sum2)*sigmab_t;
+
+end
