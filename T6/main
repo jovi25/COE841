@@ -1,0 +1,23 @@
+clear all; close all; clc;
+
+%------------------------ Lendo e Plotando Mapa --------------------------%
+% Read the map and assign to variable.
+rgbImage = imread('mapav2.tif');
+mapa = rgbImage(:,:,1:3);
+% Get the dimensions of the image.  numberOfColorBands should be = 3.
+[rows,columns,numberOfColorBands] = size(mapa(:,:,1:3));
+
+
+% Display the original color image.
+imshow(mapa(:,:,1:3), []);
+title('Original Color Image', 'FontSize', 10);
+% Enlarge figure to full screen.
+set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+%-------------------------------------------------------------------------%
+
+% Teste
+hold on
+plot(80,20,'b-o','MarkerFaceColor','cyan','MarkerSize',10)
+
+
+[mi_t,sigma_t] = EKF_known_loc (mi_tm1,sigma_tm1,u_t,zts,m);
